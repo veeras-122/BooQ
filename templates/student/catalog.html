@@ -1,0 +1,140 @@
+{% extends 'base.html' %} {% block title %}Book Catalog{% endblock %} {% block
+content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Book Catalog</h1>
+    <p class="page-sub">
+      {{ books | length }} books available · You can borrow {{ 4 -
+      current_user.active_borrows_count }} more
+    </p>
+  </div>
+</div>
+
+{% if current_user.active_borrows_count >= 4 %}
+<div class="alert-banner alert-warning">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  You have reached the maximum limit of 4 books. Return a book to reserve more.
+</div>
+{% endif %}
+
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="filter-search">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        name="q"
+        placeholder="Search by title, author, or category..."
+        value="{{ query }}"
+        class="filter-input"
+      />
+    </div>
+    <select name="dept" class="filter-select">
+      <option value="">All Departments</option>
+      {% for dept in departments %}
+      <option
+        value="{{ dept }}"
+        {%
+        if
+        selected_dept=""
+        ="dept"
+        %}selected{%
+        endif
+        %}
+      >
+        {{ dept }}
+      </option>
+      {% endfor %}
+    </select>
+    <select name="category" class="filter-select">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option
+        value="{{ cat }}"
+        {%
+        if
+        selected_cat=""
+        ="cat"
+        %}selected{%
+        endif
+        %}
+      >
+        {{ cat }}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="filter-btn">
+      <i class="bi bi-search"></i> Search
+    </button>
+    <a href="{{ url_for('student.catalog') }}" class="filter-clear">Clear</a>
+  </form>
+</div>
+
+{% if books %}
+<div class="books-grid-5">
+  {% for book in books %} {% set already_has = book.id in user_book_ids %}
+  <div
+    class="book-card {% if not book.is_available %}book-card-unavail{% endif %}"
+  >
+    <div class="book-cover">
+      {% if book.image and book.image != 'default_book.jpg' %}
+      <img
+        src="{{ url_for('static', filename='uploads/' + book.image) }}"
+        alt="{{ book.title }}"
+      />
+      {% else %}
+      <div class="book-cover-placeholder bcp-color-{{ loop.index % 8 }}">
+        <div class="bcp-dept">{{ book.department[:3] | upper }}</div>
+        <div class="bcp-title">{{ book.title[:28] }}</div>
+        <div class="bcp-author">{{ book.author.split()[0] }}</div>
+        <div class="bcp-spine"></div>
+      </div>
+      {% endif %}
+      <div
+        class="book-avail-badge {% if book.available_copies > 0 %}avail-yes{% else %}avail-no{% endif %}"
+      >
+        {% if book.available_copies > 0 %}{{ book.available_copies }} Left{%
+        else %}Unavailable{% endif %}
+      </div>
+    </div>
+    <div class="book-info">
+      <div class="book-title" title="{{ book.title }}">
+        {{ book.title[:38] }}{% if book.title|length > 38 %}...{% endif %}
+      </div>
+      <div class="book-author">{{ book.author }}</div>
+      {% if book.edition %}
+      <div class="book-edition">
+        {{ book.edition }} Edition · {{ book.year }}
+      </div>
+      {% endif %}
+      <div class="book-dept-tag">{{ book.department[:14] }}</div>
+      <div class="book-cat-tag">{{ book.category }}</div>
+    </div>
+    {% if already_has %}
+    <div class="book-reserve-btn book-reserve-done">
+      <i class="bi bi-check-lg"></i> Reserved / Borrowed
+    </div>
+    {% elif book.available_copies <= 0 %}
+    <div class="book-unavail-btn">Not Available</div>
+    {% elif current_user.active_borrows_count >= 4 %}
+    <div class="book-unavail-btn">Limit Reached (4/4)</div>
+    {% else %}
+    <form
+      method="POST"
+      action="{{ url_for('student.reserve_book', book_id=book.id) }}"
+    >
+      <button type="submit" class="book-reserve-btn">
+        <i class="bi bi-bookmark-plus"></i> Reserve
+      </button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-search"></i>
+  <p>No books found matching your search.</p>
+  <a href="{{ url_for('student.catalog') }}">View all books</a>
+</div>
+{% endif %} {% endblock %}

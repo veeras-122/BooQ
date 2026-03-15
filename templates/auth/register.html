@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — LibraSync</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+</head>
+<body class="auth-body">
+<div class="auth-split">
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="auth-brand">
+        <i class="bi bi-book-half"></i>
+        <h1>LibraSync</h1>
+      </div>
+      <p class="auth-tagline">Join our smart library system and get access to thousands of books from your department.</p>
+      <div class="auth-features">
+        <div class="auth-feature-item"><i class="bi bi-1-circle-fill"></i> Register your details</div>
+        <div class="auth-feature-item"><i class="bi bi-2-circle-fill"></i> Wait for librarian approval</div>
+        <div class="auth-feature-item"><i class="bi bi-3-circle-fill"></i> Login and explore books</div>
+        <div class="auth-feature-item"><i class="bi bi-4-circle-fill"></i> Reserve up to 4 books</div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-box" style="max-width:520px">
+      <h2 class="auth-form-title">Student Registration</h2>
+      <p class="auth-form-sub">Create your library account</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for cat, msg in messages %}
+      <div class="flash-msg flash-{{ cat }} mb-3">{{ msg }}</div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+
+      <form method="POST">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-person-fill input-icon"></i>
+                <input type="text" name="name" class="form-input" placeholder="Your full name" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Student ID *</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-card-text input-icon"></i>
+                <input type="text" name="student_id" class="form-input" placeholder="e.g. CS21001" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">College Email *</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-envelope-fill input-icon"></i>
+                <input type="email" name="email" class="form-input" placeholder="you@college.edu" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-phone-fill input-icon"></i>
+                <input type="tel" name="phone" class="form-input" placeholder="10-digit mobile">
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="form-group">
+              <label class="form-label">Department *</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-building input-icon"></i>
+                <select name="department" class="form-input" required>
+                  <option value="">Select Department</option>
+                  {% for dept in departments %}
+                  <option value="{{ dept }}">{{ dept }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label">Year *</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-calendar input-icon"></i>
+                <select name="year" class="form-input" required>
+                  <option value="">Year</option>
+                  <option value="1">1st</option>
+                  <option value="2">2nd</option>
+                  <option value="3">3rd</option>
+                  <option value="4">4th</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Password *</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-lock-fill input-icon"></i>
+                <input type="password" name="password" class="form-input" placeholder="Choose password" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Confirm Password *</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-lock-fill input-icon"></i>
+                <input type="password" name="confirm_password" class="form-input" placeholder="Repeat password" required>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary-full mt-2">Register <i class="bi bi-arrow-right-short"></i></button>
+      </form>
+      <div class="auth-divider">Already have an account?</div>
+      <a href="{{ url_for('auth.login') }}" class="btn-secondary-full">Back to Login</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

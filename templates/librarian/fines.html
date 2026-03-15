@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Fines{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Fine Management</h1>
+    <p class="page-sub">Students with outstanding fines</p>
+  </div>
+</div>
+
+{% if students %}
+<div class="table-responsive">
+  <table class="data-table">
+    <thead>
+      <tr><th>Student</th><th>Department</th><th>Total Fine</th><th>Paid</th><th>Outstanding</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      {% set outstanding = s.total_fine - s.fine_paid %}
+      <tr>
+        <td>
+          <strong>{{ s.name }}</strong>
+          <small class="d-block text-muted">{{ s.student_id }}</small>
+        </td>
+        <td>{{ s.department }}</td>
+        <td>₹{{ "%.2f"|format(s.total_fine) }}</td>
+        <td>₹{{ "%.2f"|format(s.fine_paid) }}</td>
+        <td><span class="text-danger fw-bold">₹{{ "%.2f"|format(outstanding) }}</span></td>
+        <td>
+          <button class="tbl-btn tbl-approve" onclick="openFineModal({{ s.id }}, '{{ s.name }}', {{ outstanding }})">
+            <i class="bi bi-cash"></i> Mark Paid
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-emoji-smile-fill" style="color:var(--green)"></i>
+  <p>No outstanding fines! All students are up to date.</p>
+</div>
+{% endif %}
+
+<!-- Fine Payment Modal -->
+<div class="modal-overlay" id="fineModal" style="display:none">
+  <div class="modal-box">
+    <h3 class="modal-title"><i class="bi bi-cash-stack"></i> Record Fine Payment</h3>
+    <p class="modal-sub">Student: <strong id="fine-student-name"></strong><br>Outstanding: <strong id="fine-outstanding"></strong></p>
+    <form method="POST" id="fineForm">
+      <div class="form-group">
+        <label class="form-label">Amount Being Paid (₹)</label>
+        <input type="number" name="amount" id="fine-amount-input" class="form-input" step="0.01" min="0.01">
+      </div>
+      <div class="modal-actions">
+        <button type="button" onclick="closeFineModal()" class="btn-cancel">Cancel</button>
+        <button type="submit" class="btn-submit">Confirm Payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function openFineModal(studentId, name, outstanding) {
+  document.getElementById('fine-student-name').textContent = name;
+  document.getElementById('fine-outstanding').textContent = '₹' + outstanding.toFixed(2);
+  document.getElementById('fine-amount-input').value = outstanding.toFixed(2);
+  document.getElementById('fineForm').action = '/librarian/fines/mark_paid/' + studentId;
+  document.getElementById('fineModal').style.display = 'flex';
+}
+function closeFineModal() { document.getElementById('fineModal').style.display = 'none'; }
+</script>
+{% endblock %}

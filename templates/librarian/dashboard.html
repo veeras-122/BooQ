@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-sub">Overview of library activity</p>
+  </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon"><i class="bi bi-journals"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ total_books }}</span>
+      <span class="stat-label">Total Books</span>
+    </div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ total_students }}</span>
+      <span class="stat-label">Approved Students</span>
+    </div>
+  </div>
+  <div class="stat-card stat-amber">
+    <div class="stat-icon"><i class="bi bi-arrow-left-right"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ active_borrows }}</span>
+      <span class="stat-label">Active Borrows</span>
+    </div>
+  </div>
+  <div class="stat-card stat-orange">
+    <div class="stat-icon"><i class="bi bi-clock-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ pending_reservations }}</span>
+      <span class="stat-label">Pending Reservations</span>
+    </div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ overdue_count }}</span>
+      <span class="stat-label">Overdue Books</span>
+    </div>
+  </div>
+  <div class="stat-card stat-purple">
+    <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ pending_approvals }}</span>
+      <span class="stat-label">Pending Approvals</span>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section-card mt-4">
+  <h3 class="section-card-title">Quick Actions</h3>
+  <div class="quick-actions">
+    <a href="{{ url_for('librarian.add_book') }}" class="quick-btn">
+      <i class="bi bi-plus-lg"></i> Add Book
+    </a>
+    <a href="{{ url_for('librarian.students') }}?status=pending" class="quick-btn quick-btn-orange">
+      <i class="bi bi-person-check-fill"></i> Approve Students {% if pending_approvals > 0 %}<span class="qb-badge">{{ pending_approvals }}</span>{% endif %}
+    </a>
+    <a href="{{ url_for('librarian.borrows') }}?status=reserved" class="quick-btn quick-btn-teal">
+      <i class="bi bi-bookmark-fill"></i> View Reservations {% if pending_reservations > 0 %}<span class="qb-badge">{{ pending_reservations }}</span>{% endif %}
+    </a>
+    <a href="{{ url_for('librarian.fines') }}" class="quick-btn quick-btn-red">
+      <i class="bi bi-cash-stack"></i> Manage Fines
+    </a>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="section-card mt-4">
+  <h3 class="section-card-title">Recent Activity</h3>
+  {% if recent_activity %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>Student</th><th>Book</th><th>Status</th><th>Date</th><th>Due Date</th></tr>
+      </thead>
+      <tbody>
+        {% for b in recent_activity %}
+        <tr>
+          <td>
+            <strong>{{ b.student.name }}</strong>
+            <small class="d-block text-muted">{{ b.student.student_id }}</small>
+          </td>
+          <td>
+            <strong>{{ b.book.title[:40] }}{% if b.book.title|length > 40 %}...{% endif %}</strong>
+            <small class="d-block text-muted">{{ b.book.author }}</small>
+          </td>
+          <td><span class="status-badge status-{{ b.status }}">{{ b.status | title }}</span></td>
+          <td>{{ b.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if b.due_date %}
+              {% if b.is_overdue %}<span class="text-danger fw-bold">{{ b.due_date.strftime('%d %b %Y') }} ⚠</span>
+              {% else %}{{ b.due_date.strftime('%d %b %Y') }}{% endif %}
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-inbox"></i>
+    <p>No activity yet</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

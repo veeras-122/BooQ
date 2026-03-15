@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Notifications</h1>
+    <p class="page-sub">{{ notifications | length }} total notifications</p>
+  </div>
+</div>
+
+{% if notifications %}
+<div class="notif-full-list">
+  {% for n in notifications %}
+  <div class="notif-full-item notif-{{ n.notification_type }}">
+    <div class="notif-icon">
+      <i class="bi bi-{% if n.notification_type == 'success' %}check-circle-fill{% elif n.notification_type == 'danger' %}exclamation-triangle-fill{% elif n.notification_type == 'warning' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %}"></i>
+    </div>
+    <div class="notif-body">
+      <p class="notif-msg">{{ n.message }}</p>
+      <span class="notif-time">{{ n.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+    </div>
+    <div class="notif-read-indicator {% if n.is_read %}read{% else %}unread{% endif %}"></div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-bell-slash"></i>
+  <p>No notifications yet</p>
+</div>
+{% endif %}
+{% endblock %}

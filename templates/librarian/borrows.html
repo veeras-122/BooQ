@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Borrows{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Borrow Management</h1>
+    <p class="page-sub">Manage reservations and active borrows</p>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="filter-search">
+      <i class="bi bi-search"></i>
+      <input type="text" name="q" placeholder="Search by student or book..." value="{{ query }}" class="filter-input">
+    </div>
+    <select name="status" class="filter-select">
+      <option value="all" {% if status=='all' %}selected{% endif %}>All Status</option>
+      <option value="reserved" {% if status=='reserved' %}selected{% endif %}>Reserved</option>
+      <option value="borrowed" {% if status=='borrowed' %}selected{% endif %}>Borrowed</option>
+      <option value="returned" {% if status=='returned' %}selected{% endif %}>Returned</option>
+    </select>
+    <button type="submit" class="filter-btn">Filter</button>
+    <a href="{{ url_for('librarian.borrows') }}" class="filter-clear">Clear</a>
+  </form>
+</div>
+
+{% if borrows %}
+<div class="table-responsive">
+  <table class="data-table">
+    <thead>
+      <tr><th>Student</th><th>Book</th><th>Status</th><th>Borrow Date</th><th>Due Date</th><th>Fine</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for b in borrows %}
+      <tr {% if b.is_overdue %}class="row-overdue"{% endif %}>
+        <td>
+          <strong>{{ b.student.name }}</strong>
+          <small class="d-block text-muted">{{ b.student.student_id }} · {{ b.student.department[:15] }}</small>
+        </td>
+        <td>
+          <strong>{{ b.book.title[:40] }}{% if b.book.title|length > 40 %}...{% endif %}</strong>
+          <small class="d-block text-muted">{{ b.book.author }}</small>
+        </td>
+        <td><span class="status-badge status-{{ b.status }}">{{ b.status | title }}</span>
+          {% if b.is_overdue %}<span class="overdue-tag">OVERDUE</span>{% endif %}
+        </td>
+        <td>{{ b.borrow_date.strftime('%d %b %Y') if b.borrow_date else '—' }}</td>
+        <td>
+          {% if b.due_date %}
+            {% if b.is_overdue %}<span class="text-danger fw-bold">{{ b.due_date.strftime('%d %b %Y') }}</span>
+            {% elif b.days_until_due <= 3 %}<span class="text-warning fw-bold">{{ b.due_date.strftime('%d %b %Y') }} ({{ b.days_until_due }}d left)</span>
+            {% else %}{{ b.due_date.strftime('%d %b %Y') }}{% endif %}
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if b.current_fine > 0 %}<span class="text-danger fw-bold">₹{{ "%.2f"|format(b.current_fine) }}</span>
+          {% elif b.fine_amount > 0 %}<span class="text-danger">₹{{ "%.2f"|format(b.fine_amount) }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          <div class="action-btns">
+            {% if b.status == 'reserved' %}
+            <!-- Issue modal trigger -->
+            <button type="button" class="tbl-btn tbl-approve" title="Issue Book"
+              onclick="openIssueModal({{ b.id }}, '{{ b.book.title[:30] }}', '{{ b.student.name }}')">
+              <i class="bi bi-check-lg"></i>
+            </button>
+            <form method="POST" action="{{ url_for('librarian.reject_reservation', borrow_id=b.id) }}" class="d-inline" onsubmit="return confirm('Reject this reservation?')">
+              <button type="submit" class="tbl-btn tbl-reject" title="Reject"><i class="bi bi-x-lg"></i></button>
+            </form>
+            {% elif b.status == 'borrowed' %}
+            <form method="POST" action="{{ url_for('librarian.return_book', borrow_id=b.id) }}" class="d-inline" onsubmit="return confirm('Mark this book as returned?')">
+              <button type="submit" class="tbl-btn tbl-view" title="Mark Returned"><i class="bi bi-arrow-return-left"></i></button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-arrow-left-right"></i>
+  <p>No borrow records found</p>
+</div>
+{% endif %}
+
+<!-- Issue Book Modal -->
+<div class="modal-overlay" id="issueModal" style="display:none">
+  <div class="modal-box">
+    <h3 class="modal-title"><i class="bi bi-book-fill"></i> Issue Book</h3>
+    <p class="modal-sub">Issuing: <strong id="modal-book-title"></strong><br>To: <strong id="modal-student-name"></strong></p>
+    <form method="POST" id="issueForm">
+      <div class="form-group">
+        <label class="form-label">Loan Duration (Days)</label>
+        <input type="number" name="days" class="form-input" value="10" min="1" max="30">
+        <small class="text-muted">Default 10 days. Max 30 days.</small>
+      </div>
+      <div class="modal-actions">
+        <button type="button" onclick="closeIssueModal()" class="btn-cancel">Cancel</button>
+        <button type="submit" class="btn-submit">Issue Book</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openIssueModal(borrowId, bookTitle, studentName) {
+  document.getElementById('modal-book-title').textContent = bookTitle;
+  document.getElementById('modal-student-name').textContent = studentName;
+  document.getElementById('issueForm').action = '/librarian/borrows/issue/' + borrowId;
+  document.getElementById('issueModal').style.display = 'flex';
+}
+function closeIssueModal() {
+  document.getElementById('issueModal').style.display = 'none';
+}
+</script>
+{% endblock %}

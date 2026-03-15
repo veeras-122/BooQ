@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Add Book{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Add New Book</h1>
+    <p class="page-sub">Fill in the book details below</p>
+  </div>
+  <a href="{{ url_for('librarian.books') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="form-card">
+  <form method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+      <div class="col-md-8">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Book Title *</label>
+            <input type="text" name="title" class="form-input" placeholder="Full title of the book" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Author *</label>
+            <input type="text" name="author" class="form-input" placeholder="Author name(s)" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">ISBN</label>
+            <input type="text" name="isbn" class="form-input" placeholder="ISBN number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Department *</label>
+            <select name="department" class="form-input" required>
+              <option value="">Select Department</option>
+              {% for dept in departments %}
+              <option value="{{ dept }}">{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Category *</label>
+            <input type="text" name="category" class="form-input" placeholder="e.g. Programming, Algorithms" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Year Published</label>
+            <input type="number" name="year" class="form-input" placeholder="2024" min="1800" max="2030">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Edition</label>
+            <input type="text" name="edition" class="form-input" placeholder="e.g. 3rd">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Total Copies *</label>
+            <input type="number" name="total_copies" class="form-input" value="1" min="1" max="99" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-input" rows="3" placeholder="Brief description of the book..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Book Cover Image</label>
+        <div class="image-upload-area" id="uploadArea">
+          <i class="bi bi-image"></i>
+          <p>Click or drag to upload</p>
+          <small>JPG, PNG, WEBP (max 16MB)</small>
+          <input type="file" name="image" id="imageInput" accept="image/*" class="hidden-file-input">
+        </div>
+        <img id="imagePreview" class="image-preview-img" src="" alt="">
+      </div>
+    </div>
+    <div class="form-actions mt-4">
+      <a href="{{ url_for('librarian.books') }}" class="btn-cancel">Cancel</a>
+      <button type="submit" class="btn-submit"><i class="bi bi-plus-lg"></i> Add Book</button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('uploadArea').addEventListener('click', () => document.getElementById('imageInput').click());
+document.getElementById('imageInput').addEventListener('change', function() {
+  if (this.files[0]) {
+    const preview = document.getElementById('imagePreview');
+    preview.src = URL.createObjectURL(this.files[0]);
+    preview.style.display = 'block';
+    document.getElementById('uploadArea').style.display = 'none';
+  }
+});
+</script>
+{% endblock %}

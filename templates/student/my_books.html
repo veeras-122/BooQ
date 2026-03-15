@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}My Books{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">My Books</h1>
+    <p class="page-sub">All your reservations and borrowing history</p>
+  </div>
+</div>
+
+<!-- Status filter tabs -->
+<div class="status-tabs">
+  <button class="stab active" onclick="filterStatus('all')">All</button>
+  <button class="stab" onclick="filterStatus('reserved')">Reserved</button>
+  <button class="stab" onclick="filterStatus('borrowed')">Borrowed</button>
+  <button class="stab" onclick="filterStatus('returned')">Returned</button>
+</div>
+
+{% if borrows %}
+<div class="my-books-list" id="myBooksList">
+  {% for b in borrows %}
+  <div class="my-book-row" data-status="{{ b.status }}">
+    <div class="my-book-cover">
+      {% if b.book.image and b.book.image != 'default_book.jpg' %}
+      <img src="{{ url_for('static', filename='uploads/' + b.book.image) }}" alt="">
+      {% else %}
+      <div class="my-book-cover-placeholder">{{ b.book.department[:2] | upper }}</div>
+      {% endif %}
+    </div>
+    <div class="my-book-info">
+      <div class="my-book-title">{{ b.book.title }}</div>
+      <div class="my-book-author">{{ b.book.author }}</div>
+      {% if b.book.edition %}<div class="my-book-meta">{{ b.book.edition }} Edition</div>{% endif %}
+      <div class="my-book-dept">{{ b.book.department }}</div>
+    </div>
+    <div class="my-book-dates">
+      {% if b.borrow_date %}<div><span class="date-label">Borrowed:</span> {{ b.borrow_date.strftime('%d %b %Y') }}</div>{% endif %}
+      {% if b.due_date %}
+      <div>
+        <span class="date-label">Due:</span>
+        {% if b.is_overdue %}<span class="text-danger fw-bold">{{ b.due_date.strftime('%d %b %Y') }} ⚠ OVERDUE</span>
+        {% elif b.days_until_due is not none and b.days_until_due <= 3 %}<span class="text-warning fw-bold">{{ b.due_date.strftime('%d %b %Y') }} ({{ b.days_until_due }}d left)</span>
+        {% else %}{{ b.due_date.strftime('%d %b %Y') }}{% endif %}
+      </div>
+      {% endif %}
+      {% if b.return_date %}<div><span class="date-label">Returned:</span> {{ b.return_date.strftime('%d %b %Y') }}</div>{% endif %}
+    </div>
+    <div class="my-book-status">
+      <span class="status-badge status-{{ b.status }}">{{ b.status | title }}</span>
+      {% if b.current_fine > 0 %}
+      <div class="fine-tag mt-2">₹{{ "%.2f"|format(b.current_fine) }} fine</div>
+      {% endif %}
+      {% if b.fine_amount > 0 and b.status == 'returned' %}
+      <div class="fine-tag mt-2">₹{{ "%.2f"|format(b.fine_amount) }} charged</div>
+      {% endif %}
+      {% if b.status == 'reserved' %}
+      <small class="d-block text-muted mt-1">Show ID to librarian to collect</small>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-bookmark"></i>
+  <p>You haven't borrowed any books yet.</p>
+  <a href="{{ url_for('student.catalog') }}">Browse the catalog</a>
+</div>
+{% endif %}
+
+<script>
+function filterStatus(status) {
+  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.my-book-row').forEach(row => {
+    row.style.display = (status === 'all' || row.dataset.status === status) ? 'flex' : 'none';
+  });
+}
+</script>
+{% endblock %}

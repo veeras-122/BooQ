@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Student Detail{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ student.name }}</h1>
+    <p class="page-sub">Student Profile & History</p>
+  </div>
+  <a href="{{ url_for('librarian.students') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="section-card">
+      <div class="profile-avatar-lg">{{ student.name[0] | upper }}</div>
+      <h3 class="text-center mt-3 fw-bold">{{ student.name }}</h3>
+      <p class="text-center text-muted mb-3">{{ student.student_id }}</p>
+      <div class="profile-detail-list">
+        <div class="profile-detail-item">
+          <i class="bi bi-envelope-fill"></i>
+          <span>{{ student.email }}</span>
+        </div>
+        {% if student.phone %}
+        <div class="profile-detail-item">
+          <i class="bi bi-phone-fill"></i>
+          <span>{{ student.phone }}</span>
+        </div>
+        {% endif %}
+        <div class="profile-detail-item">
+          <i class="bi bi-building"></i>
+          <span>{{ student.department }}</span>
+        </div>
+        <div class="profile-detail-item">
+          <i class="bi bi-calendar-check"></i>
+          <span>Year {{ student.year }}</span>
+        </div>
+        <div class="profile-detail-item">
+          <i class="bi bi-shield-check"></i>
+          <span class="status-badge {% if student.is_approved %}status-borrowed{% else %}status-reserved{% endif %}">
+            {% if student.is_approved %}Approved{% else %}Pending{% endif %}
+          </span>
+        </div>
+      </div>
+      <div class="profile-stats-mini mt-3">
+        <div class="psm-item">
+          <span class="psm-val">{{ student.active_borrows_count }}</span>
+          <span class="psm-label">Active</span>
+        </div>
+        <div class="psm-item">
+          <span class="psm-val">{{ borrows | length }}</span>
+          <span class="psm-label">Total</span>
+        </div>
+        <div class="psm-item">
+          {% set due = student.total_fine - student.fine_paid %}
+          <span class="psm-val {% if due > 0 %}text-danger{% endif %}">₹{{ "%.0f"|format(due) }}</span>
+          <span class="psm-label">Fine Due</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="section-card">
+      <h3 class="section-card-title">Borrowing History</h3>
+      {% if borrows %}
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Book</th><th>Borrow Date</th><th>Due Date</th><th>Returned</th><th>Status</th><th>Fine</th></tr>
+          </thead>
+          <tbody>
+            {% for b in borrows %}
+            <tr>
+              <td>
+                <strong>{{ b.book.title[:35] }}{% if b.book.title|length > 35 %}...{% endif %}</strong>
+                <small class="d-block text-muted">{{ b.book.author }}</small>
+              </td>
+              <td>{{ b.borrow_date.strftime('%d %b %Y') if b.borrow_date else '—' }}</td>
+              <td>
+                {% if b.due_date %}
+                  {% if b.is_overdue %}<span class="text-danger fw-bold">{{ b.due_date.strftime('%d %b %Y') }}</span>
+                  {% else %}{{ b.due_date.strftime('%d %b %Y') }}{% endif %}
+                {% else %}—{% endif %}
+              </td>
+              <td>{{ b.return_date.strftime('%d %b %Y') if b.return_date else '—' }}</td>
+              <td><span class="status-badge status-{{ b.status }}">{{ b.status | title }}</span></td>
+              <td>
+                {% if b.fine_amount > 0 %}
+                  <span class="text-danger">₹{{ "%.2f"|format(b.fine_amount) }}</span>
+                {% elif b.status == 'borrowed' and b.current_fine > 0 %}
+                  <span class="text-danger">₹{{ "%.2f"|format(b.current_fine) }} (accruing)</span>
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="bi bi-bookmark"></i><p>No borrow history yet</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

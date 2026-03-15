@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Welcome, {{ current_user.name.split()[0] }}!</h1>
+    <p class="page-sub">{{ current_user.department }} · Year {{ current_user.year }}</p>
+  </div>
+</div>
+
+<!-- Notifications Banner -->
+{% if notifications %}
+<div class="notif-banner-list">
+  {% for n in notifications %}
+  <div class="notif-banner notif-{{ n.notification_type }}">
+    <i class="bi bi-{% if n.notification_type == 'success' %}check-circle-fill{% elif n.notification_type == 'danger' %}exclamation-triangle-fill{% elif n.notification_type == 'warning' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %}"></i>
+    <span>{{ n.message }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- My Books Summary -->
+<div class="stats-grid stats-grid-4">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon"><i class="bi bi-bookmark-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ current_user.active_borrows_count }}</span>
+      <span class="stat-label">Active Borrows</span>
+    </div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ 4 - current_user.active_borrows_count }}</span>
+      <span class="stat-label">Books Available to Borrow</span>
+    </div>
+  </div>
+  <div class="stat-card stat-amber">
+    <div class="stat-icon"><i class="bi bi-clock-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ current_user.pending_reservations }}</span>
+      <span class="stat-label">Pending Reservations</span>
+    </div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">₹{{ "%.0f"|format(current_user.pending_fine) }}</span>
+      <span class="stat-label">Pending Fine</span>
+    </div>
+  </div>
+</div>
+
+<!-- Active Borrows -->
+{% if active_borrows %}
+<div class="section-card mt-4">
+  <h3 class="section-card-title">My Current Books</h3>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>Book</th><th>Status</th><th>Due Date</th><th>Fine Accruing</th></tr>
+      </thead>
+      <tbody>
+        {% for b in active_borrows %}
+        <tr {% if b.is_overdue %}class="row-overdue"{% endif %}>
+          <td>
+            <strong>{{ b.book.title }}</strong>
+            <small class="d-block text-muted">{{ b.book.author }}</small>
+          </td>
+          <td><span class="status-badge status-{{ b.status }}">{{ b.status | title }}</span></td>
+          <td>
+            {% if b.due_date %}
+              {% if b.is_overdue %}
+                <span class="text-danger fw-bold">{{ b.due_date.strftime('%d %b %Y') }} — OVERDUE by {{ (b.due_date - b.due_date).days | abs }} days</span>
+              {% elif b.days_until_due <= 3 %}
+                <span class="text-warning fw-bold">{{ b.due_date.strftime('%d %b %Y') }} ({{ b.days_until_due }} day{{ 's' if b.days_until_due != 1 }} left!)</span>
+              {% else %}
+                {{ b.due_date.strftime('%d %b %Y') }} ({{ b.days_until_due }} days)
+              {% endif %}
+            {% else %}Awaiting issue{% endif %}
+          </td>
+          <td>
+            {% if b.current_fine > 0 %}
+              <span class="text-danger fw-bold">₹{{ "%.2f"|format(b.current_fine) }}</span>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Recommended Books -->
+<div class="section-card mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="section-card-title mb-0">Recommended for {{ current_user.department }}</h3>
+    <a href="{{ url_for('student.catalog') }}?dept={{ current_user.department }}" class="view-all-link">View All <i class="bi bi-arrow-right-short"></i></a>
+  </div>
+  {% if recommended %}
+  <div class="books-grid-5">
+    {% for book in recommended %}
+    <div class="book-card">
+      <div class="book-cover">
+        {% if book.image and book.image != 'default_book.jpg' %}
+        <img src="{{ url_for('static', filename='uploads/' + book.image) }}" alt="{{ book.title }}">
+        {% else %}
+        <div class="book-cover-placeholder">
+          <div class="bcp-dept">{{ book.department[:3] | upper }}</div>
+          <div class="bcp-title">{{ book.title[:25] }}</div>
+          <div class="bcp-spine"></div>
+        </div>
+        {% endif %}
+        <div class="book-avail-badge {% if book.available_copies > 0 %}avail-yes{% else %}avail-no{% endif %}">
+          {% if book.available_copies > 0 %}Available{% else %}Unavailable{% endif %}
+        </div>
+      </div>
+      <div class="book-info">
+        <div class="book-title">{{ book.title[:35] }}{% if book.title|length > 35 %}...{% endif %}</div>
+        <div class="book-author">{{ book.author }}</div>
+        {% if book.edition %}<div class="book-edition">{{ book.edition }} Ed.</div>{% endif %}
+      </div>
+      {% if book.available_copies > 0 and current_user.active_borrows_count < 4 %}
+      <form method="POST" action="{{ url_for('student.reserve_book', book_id=book.id) }}">
+        <button type="submit" class="book-reserve-btn">Reserve</button>
+      </form>
+      {% elif book.available_copies <= 0 %}
+      <div class="book-unavail-btn">Not Available</div>
+      {% else %}
+      <div class="book-unavail-btn">Limit Reached</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-journals"></i>
+    <p>No books available for your department yet.</p>
+    <a href="{{ url_for('student.catalog') }}">Browse All Books</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

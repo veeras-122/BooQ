@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Books{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Book Catalog</h1>
+    <p class="page-sub">{{ books | length }} books found</p>
+  </div>
+  <a href="{{ url_for('librarian.add_book') }}" class="btn-add"><i class="bi bi-plus-lg"></i> Add Book</a>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="filter-search">
+      <i class="bi bi-search"></i>
+      <input type="text" name="q" placeholder="Search by title or author..." value="{{ query }}" class="filter-input">
+    </div>
+    <select name="dept" class="filter-select">
+      <option value="">All Departments</option>
+      {% for dept in departments %}
+      <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+      {% endfor %}
+    </select>
+    <select name="category" class="filter-select">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}" {% if selected_cat == cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="filter-btn">Filter</button>
+    <a href="{{ url_for('librarian.books') }}" class="filter-clear">Clear</a>
+  </form>
+</div>
+
+<!-- Books Grid -->
+{% if books %}
+<div class="books-grid-5">
+  {% for book in books %}
+  <div class="book-card">
+    <div class="book-cover">
+      {% if book.image and book.image != 'default_book.jpg' %}
+      <img src="{{ url_for('static', filename='uploads/' + book.image) }}" alt="{{ book.title }}">
+      {% else %}
+      <div class="book-cover-placeholder">
+        <div class="bcp-dept">{{ book.department[:3] | upper }}</div>
+        <div class="bcp-title">{{ book.title[:30] }}</div>
+        <div class="bcp-spine"></div>
+      </div>
+      {% endif %}
+      <div class="book-avail-badge {% if book.available_copies > 0 %}avail-yes{% else %}avail-no{% endif %}">
+        {% if book.available_copies > 0 %}{{ book.available_copies }} Left{% else %}Unavailable{% endif %}
+      </div>
+    </div>
+    <div class="book-info">
+      <div class="book-title" title="{{ book.title }}">{{ book.title }}</div>
+      <div class="book-author">{{ book.author }}</div>
+      {% if book.edition %}<div class="book-edition">{{ book.edition }} Edition</div>{% endif %}
+      <div class="book-dept-tag">{{ book.department[:12] }}</div>
+      <div class="book-copies">{{ book.available_copies }}/{{ book.total_copies }} copies</div>
+    </div>
+    <div class="book-actions">
+      <a href="{{ url_for('librarian.edit_book', book_id=book.id) }}" class="book-action-btn book-edit-btn">
+        <i class="bi bi-pencil-fill"></i>
+      </a>
+      <form method="POST" action="{{ url_for('librarian.delete_book', book_id=book.id) }}" onsubmit="return confirm('Delete this book?')">
+        <button type="submit" class="book-action-btn book-del-btn">
+          <i class="bi bi-trash-fill"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-journals"></i>
+  <p>No books found</p>
+  <a href="{{ url_for('librarian.add_book') }}">Add your first book</a>
+</div>
+{% endif %}
+{% endblock %}

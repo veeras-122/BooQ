@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}BooQ{% endblock %} — Smart Library System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='css/main.css') }}"
+      rel="stylesheet"
+    />
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    {% if current_user.is_authenticated %}
+    <!-- Top Navbar -->
+    <nav class="top-navbar">
+      <div class="top-navbar-inner">
+        <div class="brand-area">
+          <a href="{{ url_for('auth.index') }}" class="brand-link">
+            <i class="bi bi-book-half brand-icon"></i>
+            <h1
+              style="
+                font-size: 48px;
+                font-weight: bold;
+                color: rgb(248, 244, 244);
+              "
+            >
+              Boo<span style="color: rgb(237, 11, 11)">Q</span>
+            </h1>
+          </a>
+        </div>
+        <div class="nav-actions ms-auto d-flex align-items-center gap-3">
+          {% if current_user.role == 'student' %}
+          <a href="{{ url_for('student.notifications') }}" class="notif-btn">
+            <i class="bi bi-bell-fill"></i>
+            {% set unread = current_user.notifications | selectattr('is_read',
+            'equalto', false) | list | length %} {% if unread > 0 %}
+            <span class="notif-badge">{{ unread }}</span>
+            {% endif %}
+          </a>
+          {% endif %}
+          <div class="user-pill">
+            <div class="user-avatar">{{ current_user.name[0] | upper }}</div>
+            <div class="user-info">
+              <span class="user-name">{{ current_user.name }}</span>
+              <span class="user-role">{{ current_user.role | title }}</span>
+            </div>
+            <div class="user-menu">
+              {% if current_user.role == 'student' %}
+              <a href="{{ url_for('student.profile') }}"
+                ><i class="bi bi-person-circle"></i> Profile</a
+              >
+              {% endif %}
+              <a href="{{ url_for('auth.logout') }}" class="logout-link"
+                ><i class="bi bi-box-arrow-right"></i> Logout</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Side Navbar -->
+    <div class="page-wrapper">
+      <aside class="side-nav">
+        {% if current_user.role == 'librarian' %}
+        <div class="side-nav-section">
+          <p class="side-nav-label">MANAGEMENT</p>
+          <a
+            href="{{ url_for('librarian.dashboard') }}"
+            class="side-nav-item {% if request.endpoint == 'librarian.dashboard' %}active{% endif %}"
+          >
+            <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
+          </a>
+          <a
+            href="{{ url_for('librarian.books') }}"
+            class="side-nav-item {% if 'books' in request.endpoint %}active{% endif %}"
+          >
+            <i class="bi bi-journals"></i><span>Books</span>
+          </a>
+          <a
+            href="{{ url_for('librarian.students') }}"
+            class="side-nav-item {% if 'students' in request.endpoint %}active{% endif %}"
+          >
+            <i class="bi bi-people-fill"></i><span>Students</span>
+          </a>
+        </div>
+        <div class="side-nav-section">
+          <p class="side-nav-label">TRANSACTIONS</p>
+          <a
+            href="{{ url_for('librarian.borrows') }}"
+            class="side-nav-item {% if request.endpoint == 'librarian.borrows' %}active{% endif %}"
+          >
+            <i class="bi bi-arrow-left-right"></i><span>Borrows</span>
+            {% set pending = namespace(count=0) %} {% for b in [] %}{% endfor %}
+          </a>
+          <a
+            href="{{ url_for('librarian.borrows') }}?status=reserved"
+            class="side-nav-item"
+          >
+            <i class="bi bi-clock-fill"></i><span>Reservations</span>
+          </a>
+          <a
+            href="{{ url_for('librarian.fines') }}"
+            class="side-nav-item {% if request.endpoint == 'librarian.fines' %}active{% endif %}"
+          >
+            <i class="bi bi-cash-stack"></i><span>Fines</span>
+          </a>
+        </div>
+        {% else %}
+        <div class="side-nav-section">
+          <p class="side-nav-label">EXPLORE</p>
+          <a
+            href="{{ url_for('student.dashboard') }}"
+            class="side-nav-item {% if request.endpoint == 'student.dashboard' %}active{% endif %}"
+          >
+            <i class="bi bi-house-fill"></i><span>Home</span>
+          </a>
+          <a
+            href="{{ url_for('student.catalog') }}"
+            class="side-nav-item {% if request.endpoint == 'student.catalog' %}active{% endif %}"
+          >
+            <i class="bi bi-grid-3x3-gap-fill"></i><span>Book Catalog</span>
+          </a>
+        </div>
+        <div class="side-nav-section">
+          <p class="side-nav-label">MY LIBRARY</p>
+          <a
+            href="{{ url_for('student.my_books') }}"
+            class="side-nav-item {% if request.endpoint == 'student.my_books' %}active{% endif %}"
+          >
+            <i class="bi bi-bookmark-fill"></i><span>My Books</span>
+          </a>
+          <a
+            href="{{ url_for('student.profile') }}"
+            class="side-nav-item {% if request.endpoint == 'student.profile' %}active{% endif %}"
+          >
+            <i class="bi bi-person-fill"></i><span>My Profile</span>
+          </a>
+          <a
+            href="{{ url_for('student.notifications') }}"
+            class="side-nav-item {% if request.endpoint == 'student.notifications' %}active{% endif %}"
+          >
+            <i class="bi bi-bell-fill"></i><span>Notifications</span>
+          </a>
+        </div>
+        {% endif %}
+        <div class="side-nav-footer">
+          <a
+            href="{{ url_for('auth.logout') }}"
+            class="side-nav-item logout-item"
+          >
+            <i class="bi bi-box-arrow-left"></i><span>Logout</span>
+          </a>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %}
+        <div class="flash-container">
+          {% for cat, msg in messages %}
+          <div class="flash-msg flash-{{ cat }}">
+            <i
+              class="bi bi-{% if cat == 'success' %}check-circle-fill{% elif cat == 'danger' %}exclamation-triangle-fill{% elif cat == 'warning' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %}"
+            ></i>
+            <span>{{ msg }}</span>
+            <button onclick="this.parentElement.remove()" class="flash-close">
+              ×
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %} {% endwith %} {% block content %}{% endblock %}
+      </main>
+    </div>
+    {% else %} {% block auth_content %}{% endblock %} {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

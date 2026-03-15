@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Edit Book{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Edit Book</h1>
+    <p class="page-sub">Update book information</p>
+  </div>
+  <a href="{{ url_for('librarian.books') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="form-card">
+  <form method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+      <div class="col-md-8">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Book Title *</label>
+            <input type="text" name="title" class="form-input" value="{{ book.title }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Author *</label>
+            <input type="text" name="author" class="form-input" value="{{ book.author }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">ISBN</label>
+            <input type="text" name="isbn" class="form-input" value="{{ book.isbn or '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Department *</label>
+            <select name="department" class="form-input" required>
+              {% for dept in departments %}
+              <option value="{{ dept }}" {% if book.department == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Category *</label>
+            <input type="text" name="category" class="form-input" value="{{ book.category }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Year Published</label>
+            <input type="number" name="year" class="form-input" value="{{ book.year or '' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Edition</label>
+            <input type="text" name="edition" class="form-input" value="{{ book.edition or '' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Total Copies</label>
+            <input type="number" name="total_copies" class="form-input" value="{{ book.total_copies }}" min="1" max="99">
+          </div>
+          <div class="col-12">
+            <div class="info-box">
+              Currently <strong>{{ book.available_copies }}</strong> of <strong>{{ book.total_copies }}</strong> copies available.
+              Adjusting total copies will proportionally update availability.
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-input" rows="3">{{ book.description or '' }}</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Book Cover</label>
+        {% if book.image and book.image != 'default_book.jpg' %}
+        <img src="{{ url_for('static', filename='uploads/' + book.image) }}" class="current-book-img" alt="">
+        <p class="mt-2 text-muted small">Upload new image to replace</p>
+        {% else %}
+        <div class="image-upload-area" id="uploadArea">
+          <i class="bi bi-image"></i>
+          <p>Click to upload cover image</p>
+          <input type="file" name="image" id="imageInput" accept="image/*" class="hidden-file-input">
+        </div>
+        {% endif %}
+        <input type="file" name="image" id="imageInput2" accept="image/*" class="form-input mt-2">
+      </div>
+    </div>
+    <div class="form-actions mt-4">
+      <a href="{{ url_for('librarian.books') }}" class="btn-cancel">Cancel</a>
+      <button type="submit" class="btn-submit"><i class="bi bi-check-lg"></i> Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

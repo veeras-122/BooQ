@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Students</h1>
+    <p class="page-sub">{{ students | length }} students</p>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="filter-search">
+      <i class="bi bi-search"></i>
+      <input type="text" name="q" placeholder="Search by name, ID or email..." value="{{ query }}" class="filter-input">
+    </div>
+    <select name="status" class="filter-select">
+      <option value="all" {% if filter_status=='all' %}selected{% endif %}>All Students</option>
+      <option value="approved" {% if filter_status=='approved' %}selected{% endif %}>Approved</option>
+      <option value="pending" {% if filter_status=='pending' %}selected{% endif %}>Pending Approval</option>
+    </select>
+    <button type="submit" class="filter-btn">Filter</button>
+    <a href="{{ url_for('librarian.students') }}" class="filter-clear">Clear</a>
+  </form>
+</div>
+
+{% if students %}
+<div class="table-responsive">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Department</th>
+        <th>Year</th>
+        <th>Contact</th>
+        <th>Active Books</th>
+        <th>Fine Due</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td>
+          <div class="student-cell">
+            <div class="student-avatar-sm">{{ s.name[0] | upper }}</div>
+            <div>
+              <strong>{{ s.name }}</strong>
+              <small class="d-block text-muted">{{ s.student_id }}</small>
+            </div>
+          </div>
+        </td>
+        <td>{{ s.department }}</td>
+        <td>Year {{ s.year }}</td>
+        <td>
+          <small>{{ s.email }}</small>
+          {% if s.phone %}<small class="d-block text-muted">{{ s.phone }}</small>{% endif %}
+        </td>
+        <td>
+          <span class="badge-count">{{ s.active_borrows_count }} / 4</span>
+        </td>
+        <td>
+          {% set due = s.total_fine - s.fine_paid %}
+          {% if due > 0 %}<span class="text-danger fw-bold">₹{{ "%.2f"|format(due) }}</span>
+          {% else %}<span class="text-success">—</span>{% endif %}
+        </td>
+        <td>
+          {% if s.is_approved %}
+          <span class="status-badge status-borrowed">Approved</span>
+          {% else %}
+          <span class="status-badge status-reserved">Pending</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="action-btns">
+            {% if not s.is_approved %}
+            <form method="POST" action="{{ url_for('librarian.approve_student', student_id=s.id) }}" class="d-inline">
+              <button type="submit" class="tbl-btn tbl-approve" title="Approve"><i class="bi bi-check-lg"></i></button>
+            </form>
+            <form method="POST" action="{{ url_for('librarian.reject_student', student_id=s.id) }}" class="d-inline" onsubmit="return confirm('Reject and remove this student?')">
+              <button type="submit" class="tbl-btn tbl-reject" title="Reject"><i class="bi bi-x-lg"></i></button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('librarian.student_detail', student_id=s.id) }}" class="tbl-btn tbl-view" title="View"><i class="bi bi-eye-fill"></i></a>
+            <form method="POST" action="{{ url_for('librarian.delete_student', student_id=s.id) }}" class="d-inline" onsubmit="return confirm('Delete student?')">
+              <button type="submit" class="tbl-btn tbl-del" title="Delete"><i class="bi bi-trash-fill"></i></button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-people"></i>
+  <p>No students found</p>
+</div>
+{% endif %}
+{% endblock %}
