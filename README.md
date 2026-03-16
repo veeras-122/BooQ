@@ -1,4 +1,4 @@
-# 📚 LibraSync — Smart Library Management System
+# 📚 BooQ — Smart Library Management System
 
 A fully-featured digital library management system built with Flask, SQLite, and Bootstrap.
 
